@@ -262,18 +262,19 @@ public class TestController {
         return ResponseEntity.ok().body(roomLockerModels);
     }
     @PutMapping("/edit/student")
-    public ResponseEntity<Student>updateStudent(@Valid @RequestBody StudentDetails form) throws ResourceNotFoundException {
-
+    public void updateStudent(@Valid @RequestBody StudentDetails form) throws ResourceNotFoundException {
         Locker locker = userService.getLockerByNumber(form.getNumber());
-        Student student = userService.findStudentByName(form.getStudentName());
-
-        if (student.getId() == null){
-         Student studentNew = new Student(null, form.getStudentName(), form.getClassroom(), form.getGrade());
-            return new ResponseEntity(userService.saveStudent(studentNew),HttpStatus.OK);
+        Student student = locker.getStudent();
+        Student studentNew = new Student(null, form.getStudentName(), form.getClassroom(), form.getGrade());
+        if (locker.getStudent() == null || locker.getStudent().getStudentName() == null){
+            userService.saveStudent(studentNew);
+            userService.addStudentToLocker(form.getStudentName(), form.getNumber(), form.getRoomName());
         }
         else {
-            Student studentNew = new Student(null, form.getStudentName(), form.getClassroom(), form.getGrade());
-            return new ResponseEntity(userService.updateStudent(student.getId(),studentNew),HttpStatus.OK);
+            student.setStudentName(form.getStudentName());
+            student.setClassroom(form.getClassroom());
+            student.setGrade(form.getGrade());
+            userService.getLockerByNumber(form.getNumber()).setStudent(student);
         }
     }
 
